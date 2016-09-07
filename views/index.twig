@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="./materialize/css/materialize.min.css"  media="screen,projection"/>
+    <!--Let browser know website is optimized for mobile-->
+    <link rel="stylesheet" href="./jquery-ui-1.12.0/jquery-ui.min.css"/>
+    <link rel="stylesheet" href="./tagit/css/jquery.tagit.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+
+<body>
+<!--Import jQuery before materialize.js-->
+    <div class="container">
+        <div class="row">
+            <h1> Email Service </h1>
+            <form class="col s12" action="/send-mail" method="post" id="form-email">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input id="from_email" type="email" class="validate" required>
+                        <label for="from_email">Email</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <input id="subject" type="text" class="validate" required>
+                        <label for="subject">Subject</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <textarea id="content" class="materialize-textarea" required></textarea>
+                        <label for="content">Content</label>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <div id="to" class="chips chips-placeholder"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <div id="cc" class="chips chips-placeholder"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
+                        <div id="bcc" class="chips chips-placeholder"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <button class="btn btn-primary" id="send-mail" type="submit"> Send Email</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="./jquery-3.1.0.min.js"></script>
+<script type="text/javascript" src="./materialize/js/materialize.min.js"></script>
+<script src="./jquery-ui-1.12.0/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="./tagit/js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
+<script>
+//    function isEmail(str) {
+//        var pattern = "^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$";
+//        return str.match(pattern);
+//    }
+    
+    $(function(){
+        $('#to').material_chip({
+            placeholder: 'Enter a tag',
+            secondaryPlaceholder: 'Enter Address',
+        });
+        $('#cc').material_chip({
+            placeholder: 'Enter a tag',
+            secondaryPlaceholder: 'Enter CC',
+        });
+        $('#bcc').material_chip({
+            placeholder: 'Enter a tag',
+            secondaryPlaceholder: 'Enter BCC',
+        });
+
+        $("#form-email").on('submit',function(e){
+            e.preventDefault();
+            var data = {};
+            var to_email = [];
+            var cc = [],bcc = [];
+
+            $("#to").find(".chip").map(function(index,elem){
+                $(elem).find('i').remove();
+                to_email.push({email: $(elem).text()});
+            });
+            $("#cc").find(".chip").map(function(index,elem){
+                $(elem).find('i').remove();
+                cc.push({email: $(elem).text()});
+            });
+            $("#bcc").find(".chip").map(function(index,elem){
+                $(elem).find('i').remove();
+                bcc.push({email: $(elem).text()});
+            });
+
+            data.from_email = $('#from_email').val();
+            data.to_email = to_email;
+            data.cc = cc;
+            data.bcc = bcc;
+            data.subject = $('#subject').val();
+            data.content = $("#content").val();
+            $.ajax({
+                url : '/send-mail',
+                method : 'POST',
+                data : data
+            }).done(function(result){
+
+            }).fail(function(err){
+
+            })
+        })
+    })
+
+</script>
+</html>
