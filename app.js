@@ -183,10 +183,12 @@ db.init(configs.db.uri, configs.db.options, function(err){
             fileInfo.map(function(file){
                 request.body.attachments.push({
                     filename : file.originalname,
-                    content : file.buffer.toString('base64')
+                    content : file.buffer.toString('base64'),
+                    type : file.mimeType
                 });
             })
         }
+        console.log(request.body.personalizations);
         sg.API(request,function(error,response){
             console.log(response);
             if(error){
