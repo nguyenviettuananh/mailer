@@ -15,6 +15,7 @@
     "lodash": "^4.15.0",
     "mongoose": "^4.6.0",
     "morgan": "^1.7.0",
+    "multer": "^1.2.0",
     "nodemailer": "^2.5.0",
     "sendgrid": "^4.0.2",
     "sendgrid-webhook": "0.0.4",

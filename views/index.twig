@@ -16,38 +16,46 @@
     <div class="container">
         <div class="row">
             <h1> Email Service </h1>
-            <form class="col s12" action="/send-mail" method="post" id="form-email">
+            <form class="col s12" action="/send-att" method="post" id="form-email" enctype="multipart/form-data">
                 <div class="row">
                     <div class="input-field col s12">
-                        <input id="from_email" type="email" class="validate" required>
+                        <input id="from_email" name="from_email" type="email" class="validate" >
                         <label for="from_email">Email</label>
                     </div>
                 </div>
                 <div class="row">
                     <div class="input-field col s12">
-                        <input id="subject" type="text" class="validate" required>
+                        <input id="subject" type="text" name="subject" class="validate" >
                         <label for="subject">Subject</label>
                     </div>
                 </div>
                 <div class="row">
                     <div class="input-field col s12">
-                        <textarea id="content" class="materialize-textarea" required></textarea>
+                        <textarea id="content" name="content" class="materialize-textarea"></textarea>
                         <label for="content">Content</label>
                     </div>
                 </div>
                 <div class="row">
                     <div class="input-field col s12">
+                        <input id="file" type="file" class="validate" name="attachments" multiple>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="input-field col s12">
                         <div id="to" class="chips chips-placeholder"></div>
+                        <input type="hidden" name="to">
                     </div>
                 </div>
                 <div class="row">
                     <div class="input-field col s12">
                         <div id="cc" class="chips chips-placeholder"></div>
+                        <input type="hidden" name="cc">
                     </div>
                 </div>
                 <div class="row">
                     <div class="input-field col s12">
                         <div id="bcc" class="chips chips-placeholder"></div>
+                        <input type="hidden" name="bcc">
                     </div>
                 </div>
                 <div class="row">
@@ -82,40 +90,67 @@
         });
 
         $("#form-email").on('submit',function(e){
-            e.preventDefault();
-            var data = {};
             var to_email = [];
             var cc = [],bcc = [];
-
             $("#to").find(".chip").map(function(index,elem){
                 $(elem).find('i').remove();
-                to_email.push({email: $(elem).text()});
+                to_email.push($(elem).text());
             });
             $("#cc").find(".chip").map(function(index,elem){
                 $(elem).find('i').remove();
-                cc.push({email: $(elem).text()});
+                cc.push($(elem).text());
             });
             $("#bcc").find(".chip").map(function(index,elem){
                 $(elem).find('i').remove();
-                bcc.push({email: $(elem).text()});
+                bcc.push($(elem).text());
             });
+            $("input[name='to']").val(to_email);
+            $("input[name='cc']").val(cc);
+            $("input[name='bcc']").val(bcc);
+        });
 
-            data.from_email = $('#from_email').val();
-            data.to_email = to_email;
-            data.cc = cc;
-            data.bcc = bcc;
-            data.subject = $('#subject').val();
-            data.content = $("#content").val();
-            $.ajax({
-                url : '/send-mail',
-                method : 'POST',
-                data : data
-            }).done(function(result){
-
-            }).fail(function(err){
-
-            })
-        })
+//        $("#form-email").on('submit',function(e){
+//            e.preventDefault();
+//            var data = {};
+//            var to_email = [];
+//            var cc = [],bcc = [];
+//
+//            $("#to").find(".chip").map(function(index,elem){
+//                $(elem).find('i').remove();
+//                to_email.push({email: $(elem).text()});
+//            });
+//            $("#cc").find(".chip").map(function(index,elem){
+//                $(elem).find('i').remove();
+//                cc.push({email: $(elem).text()});
+//            });
+//            $("#bcc").find(".chip").map(function(index,elem){
+//                $(elem).find('i').remove();
+//                bcc.push({email: $(elem).text()});
+//            });
+//
+//            data.from_email = $('#from_email').val();
+//            data.to_email = to_email;
+//            data.cc = cc;
+//            data.bcc = bcc;
+//            data.subject = $('#subject').val();
+//            data.content = $("#content").val();
+//            var data = new FormData();
+//            jQuery.each(jQuery('#file')[0].files, function(i, file) {
+//                data.append('file-'+i, file);
+//            });
+//            $.ajax({
+//                url : '/send-att',
+//                method : 'POST',
+//                data: data,
+//                cache: false,
+//                contentType: false,
+//                processData: false,
+//            }).done(function(result){
+//
+//            }).fail(function(err){
+//
+//            })
+//        })
     })
 
 </script>

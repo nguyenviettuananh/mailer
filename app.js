@@ -24,6 +24,10 @@ const API_KEY = configs.sendGrid.api_key;
 var sg = require('sendgrid')(API_KEY);
 var sgRequest = require(path.join(API_DIR,'sendgridAPI')).request;
 
+var multer  = require('multer')
+    , upload = multer({ storage: multer.memoryStorage({})})
+    , helper = require('sendgrid').mail;
+
 function timeConverter(UNIX_timestamp){
     var a = new Date(UNIX_timestamp * 1000);
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -67,11 +71,11 @@ db.init(configs.db.uri, configs.db.options, function(err){
         //Need to create redis queue
         var events = req.body;
         Promise.map(events,function(event){
+            var pattern = event.sg_message_id.split('.').shift();
             if(event.event == "processed"){
-                console.log('processed',event);
                 return Email.findOneAndUpdate({
-                    'x-message-id' : new RegExp(event.sg_message_id),
-                    'to_email' : event.email
+                    'x-message-id' : pattern,
+                    to_email : event.email
                 },{
                     $set : {
                         sg_message_id : event.sg_message_id,
@@ -82,7 +86,6 @@ db.init(configs.db.uri, configs.db.options, function(err){
                     }
                 })
             } else if(event.event == 'delivered'){
-                console.log('delivered',event);
                 return Email.findOneAndUpdate({
                     sg_message_id : event.sg_message_id
                 },{
@@ -102,12 +105,18 @@ db.init(configs.db.uri, configs.db.options, function(err){
                         isOpened : {
                             status : true
                         }
-                    },
-                    $push : {
-                        isOpened : {
-                            created_at : timeConverter(event.timestamp)
-                        }
                     }
+                },{
+                    new : true
+                }).exec().then(function(event){
+                    console.log(event);
+                    return Email.findOneAndUpdate({
+                        sg_message_id : event.sg_message_id
+                    },{
+                        $push : {
+                            'isOpened.created_at' : timeConverter(event.timestamp)
+                        }
+                    })
                 })
             } else if(event.event == 'click'){
                 console.log('click',event);
@@ -118,12 +127,17 @@ db.init(configs.db.uri, configs.db.options, function(err){
                         isClickedLink : {
                             status : true
                         }
-                    },
-                    $push : {
-                        isOpened : {
-                            created_at : timeConverter(event.timestamp)
-                        }
                     }
+                },{
+                    new : true
+                }).exec().then(function(event){
+                    return Email.findOneAndUpdate({
+                        sg_message_id : event.sg_message_id
+                    },{
+                        $push : {
+                            'isClickedLink.created_at' : timeConverter(event.timestamp)
+                        }
+                    })
                 })
             }
         }).then(function(){
@@ -132,6 +146,62 @@ db.init(configs.db.uri, configs.db.options, function(err){
             console.log(err);
             res.sendStatus(500)
         })
+    });
+
+
+    app.post('/send-att',upload.array('attachments',4),function(req,res){
+        var to_email = req.body.to.split(','),to = [];
+        var cc1 =  (req.body.cc.length > 0) ? req.body.cc.split(',') : null, cc = [];
+        var bcc1 = (req.body.bcc.length > 0) ? req.body.bcc.split(',') : null, bcc = [];
+        to_email.map(function(val){
+            to.push({
+                email : val
+            })
+        });
+        if(cc1 == null){
+            cc = null
+        } else {
+            cc1.map(function(val){
+                cc.push({
+                    email : val
+                })
+            });
+        }
+        if(bcc1 == null){
+            bcc = null
+        } else {
+            bcc1.map(function(val){
+                bcc.push({
+                    email : val
+                })
+            });
+        };
+        var fileInfo = req.files;
+
+        var request = sgRequest(to,req.body.from_email,req.body.subject,req.body.content,cc,bcc);
+        if(fileInfo){
+            fileInfo.map(function(file){
+                request.body.attachments.push({
+                    filename : file.originalname,
+                    content : file.buffer.toString('base64')
+                });
+            })
+        }
+        sg.API(request,function(error,response){
+            console.log(response);
+            if(error){
+                res.json({
+                    err : 1,
+                    msg : "Error : " + error
+                })
+            } else {
+                res.json({
+                    err : 0,
+                    msg : "Success"
+                })
+            }
+        })
+        // res.redirect('/')
     })
 
     app.post('/send-mail',function(req,res){
@@ -139,7 +209,6 @@ db.init(configs.db.uri, configs.db.options, function(err){
         var receivers = req.body.to_email.concat(req.body.cc,req.body.bcc);
         sg.API(request,function(error,response){
             if(error){
-
                 res.json({
                     err : 1,
                     msg : "Error + " + error
@@ -151,10 +220,10 @@ db.init(configs.db.uri, configs.db.options, function(err){
                         from_email : req.body.from_email,
                         to_email :  receiver.email,
                         subject : req.body.subject,
-                        isProccessed : {
+                        isProcessed : {
                             status : false
                         },
-                        isDeliverd : {
+                        isDelivered : {
                             status : false
                         },
                         isOpened : {

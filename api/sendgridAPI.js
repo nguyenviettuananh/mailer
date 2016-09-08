@@ -25,6 +25,7 @@ module.exports = {
                         value: content,
                     },
                 ],
+                attachments : []
             },
         });
     }

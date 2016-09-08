@@ -27,20 +27,20 @@ var email = new schema({
         required: false
     },
     isProcessed: {
-        status : { type : Boolean, default : false},
-        created_at : Date
+        status : false,
+        created_at : []
     },
     isDelivered: {
-        status : { type : Boolean, default : false},
-        created_at : Date
+        status : false,
+        created_at : []
     },
     isOpened: {
-        status : { type : Boolean, default : false},
-        created_at : [Date]
+        status : false,
+        created_at : []
     },
     isClickedLink: {
-        status : { type : Boolean, default : false},
-        created_at : [Date],
+        status : false,
+        created_at : []
     },
     created_at: {type: Date, default: Date.now }
 });
